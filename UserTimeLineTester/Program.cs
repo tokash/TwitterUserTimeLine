@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web.Script;
-using System.Web.Script.Serialization;
-using Newtonsoft.Json;
-using System.Web.Helpers;
+using TwitterUserTimeLine;
 
-namespace TwitterUserTimeLine
+namespace UserTimeLineTester
 {
     class Program
     {
@@ -22,6 +17,4 @@ namespace TwitterUserTimeLine
             List<TweetObject> tweets = twitterAPI.GetUserTimeLineInTimeFrame("16589206", new TimeSpan(24, 0, 0));
         }
     }
-
-    
 }
