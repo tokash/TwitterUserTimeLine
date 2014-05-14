@@ -84,46 +84,34 @@ namespace TwitterUserTimeLine
             var timelineFormatCursor = "https://api.twitter.com/1.1/statuses/user_timeline.json?user_id={0}&max_id={1}&include_rts=1&exclude_replies=1&count=200";
             var timelineUrl = string.Format(timelineFormat, iUserID);
             WebResponse timeLineResponse = null;
+            bool succeeded = false;
 
             
             if (_Token != null)
             {
-                // Do the timeline
-                    
-                //HttpWebRequest timeLineRequest = (HttpWebRequest)WebRequest.Create(timelineUrl);
-                //var timelineHeaderFormat = "{0} {1}";
-                //timeLineRequest.Headers.Add("Authorization", string.Format(timelineHeaderFormat, _Token.token_type, _Token.access_token));
-                //timeLineRequest.Method = "Get";
-
-                try
+                while (!succeeded)
                 {
-                    timeLineResponse = CallGetUserTimeline(timelineUrl, _Token);
-                }
-                catch (Exception ex)
-                {
-                    if (ex.Message.Contains("429"))
+                    try
                     {
-                        //need to wait 15 minutes
-                        String message = string.Format("{0}: Rate Limit Reached for {1}, Sleeping for 15 minutes...", DateTime.Now, timelineUrl);
-                        Console.WriteLine(message);
-                        System.Threading.Thread.Sleep(900000);
-                        Console.WriteLine(string.Format("{0}: Woke up...", DateTime.Now));
+                        timeLineResponse = CallGetUserTimeline(timelineUrl, _Token);
+                        succeeded = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.Message.Contains("429"))
+                        {
+                            //need to wait 15 minutes
+                            String message = string.Format("{0}: Rate Limit Reached for {1}, Sleeping for 15 minutes...", DateTime.Now, timelineUrl);
+                            Console.WriteLine(message);
+                            System.Threading.Thread.Sleep(TimeSpan.FromMinutes(15));
+                            Console.WriteLine(string.Format("{0}: Woke up...", DateTime.Now));
 
-                        //calling again after 15 minutes
-                        try
-                        {
-                            timeLineResponse = CallGetUserTimeline(timelineUrl, _Token);
                         }
-                        catch (Exception)
+                        else
                         {
-                            
                             throw;
                         }
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    } 
                 }
 
                 var timeLineJson = string.Empty;
@@ -156,6 +144,7 @@ namespace TwitterUserTimeLine
                     timeLineJson = string.Empty;
                 }
 
+                succeeded = false;
                 if (timeLineResponse != null)
                 {
                     while (timeline.Count < iNumTweetsToGet && currTimeline != null && currTimeline.Count > 1)
@@ -170,7 +159,7 @@ namespace TwitterUserTimeLine
                                 //wait 15 minutes
                                 String message = string.Format("{0}: Rate Limit Reached for {1}, Sleeping for 15 minutes...", DateTime.Now, timelineUrl);
                                 Console.WriteLine(message);
-                                System.Threading.Thread.Sleep(900000);
+                                System.Threading.Thread.Sleep(TimeSpan.FromMinutes(15));
                                 Console.WriteLine(string.Format("{0}: Woke up...", DateTime.Now));
                             }
                         }
@@ -180,43 +169,32 @@ namespace TwitterUserTimeLine
                         currTimeline.Clear();
 
                         timelineUrl = string.Format(timelineFormatCursor, iUserID, max_id);
-                        //timeLineRequest = (HttpWebRequest)WebRequest.Create(timelineUrl);
-                        //timelineHeaderFormat = "{0} {1}";
-                        //timeLineRequest.Headers.Add("Authorization", string.Format(timelineHeaderFormat, _Token.token_type, _Token.access_token));
-                        //timeLineRequest.Method = "Get";
-                        //timeLineResponse = timeLineRequest.GetResponse();
 
-                        try
+                        while (!succeeded)
                         {
-                            timeLineResponse = CallGetUserTimeline(timelineUrl, _Token);
-                        }
-                        catch (Exception ex)
-                        {
-                            if (ex.Message.Contains("429"))
+                            try
                             {
-                                //need to wait 15 minutes
-                                String message = string.Format("{0}: Rate Limit Reached for {1}, Sleeping for 15 minutes...", DateTime.Now, timelineUrl);
-                                Console.WriteLine(message);
-                                System.Threading.Thread.Sleep(900000);
-                                Console.WriteLine(string.Format("{0}: Woke up...", DateTime.Now));
-
-                                //calling again after 15 minutes
-                                try
+                                timeLineResponse = CallGetUserTimeline(timelineUrl, _Token);
+                                succeeded = true;
+                            }
+                            catch (Exception ex)
+                            {
+                                if (ex.Message.Contains("429"))
                                 {
-                                    timeLineResponse = CallGetUserTimeline(timelineUrl, _Token);
+                                    //need to wait 15 minutes
+                                    String message = string.Format("{0}: Rate Limit Reached for {1}, Sleeping for 15 minutes...", DateTime.Now, timelineUrl);
+                                    Console.WriteLine(message);
+                                    System.Threading.Thread.Sleep(TimeSpan.FromMinutes(15));
+                                    Console.WriteLine(string.Format("{0}: Woke up...", DateTime.Now));
                                 }
-                                catch (Exception)
+                                else
                                 {
-
                                     throw;
                                 }
-                            }
-                            else
-                            {
-                                throw;
-                            }
+                            } 
                         }
 
+                        succeeded = false;
                         if (timeLineResponse != null)
                         {
                             using (var reader = new StreamReader(timeLineResponse.GetResponseStream()))
@@ -275,10 +253,7 @@ namespace TwitterUserTimeLine
                     try
                     {
                         timeLineResponse = CallGetUserTimeline(timelineUrl, _Token);
-                        if (timeLineResponse != null)
-                        {
-                            succeeded = true;
-                        }
+                        succeeded = true;
                     }
                     catch (Exception ex)
                     {
@@ -287,7 +262,7 @@ namespace TwitterUserTimeLine
                             //need to wait 15 minutes
                             String message = string.Format("{0}: Rate Limit Reached for {1}, Sleeping for 15 minutes...", DateTime.Now, timelineUrl);
                             Console.WriteLine(message);
-                            System.Threading.Thread.Sleep(900000);
+                            System.Threading.Thread.Sleep(TimeSpan.FromMinutes(15));
                             Console.WriteLine(string.Format("{0}: Woke up...", DateTime.Now));
                         }
                         else
@@ -353,7 +328,7 @@ namespace TwitterUserTimeLine
                                 //wait 15 minutes
                                 String message = string.Format("{0}: Rate Limit Reached for {1}, Sleeping for 15 minutes...", DateTime.Now, timelineUrl);
                                 Console.WriteLine(message);
-                                System.Threading.Thread.Sleep(900000);
+                                System.Threading.Thread.Sleep(TimeSpan.FromMinutes(15));
                                 Console.WriteLine(string.Format("{0}: Woke up...", DateTime.Now));
                             }
                         }
@@ -368,11 +343,8 @@ namespace TwitterUserTimeLine
                         {
                             try
                             {
-                                timeLineResponse = CallGetUserTimeline(timelineUrl, _Token);
-                                if (timeLineResponse != null)
-                                {
-                                    succeeded = true;
-                                }
+                                timeLineResponse = CallGetUserTimeline(timelineUrl, _Token);                                
+                                succeeded = true;
                             }
                             catch (Exception ex)
                             {
@@ -381,7 +353,7 @@ namespace TwitterUserTimeLine
                                     //need to wait 15 minutes
                                     String message = string.Format("{0}: Rate Limit Reached for {1}, Sleeping for 15 minutes...", DateTime.Now, timelineUrl);
                                     Console.WriteLine(message);
-                                    System.Threading.Thread.Sleep(900000);
+                                    System.Threading.Thread.Sleep(TimeSpan.FromMinutes(15));
                                     Console.WriteLine(string.Format("{0}: Woke up...", DateTime.Now));
                                 }
                                 else
@@ -454,11 +426,8 @@ namespace TwitterUserTimeLine
             {
                 try
                 {
-                    response = CallGetRetweets(url, _Token);
-                    if (response != null)
-                    {
-                        succeeded = true;
-                    }
+                    response = CallGetRetweets(url, _Token);                    
+                    succeeded = true;
                 }
                 catch (Exception ex)
                 {
@@ -467,7 +436,7 @@ namespace TwitterUserTimeLine
                         //need to wait 15 minutes
                         String message = string.Format("{0}: Rate Limit Reached for {1}, Sleeping for 15 minutes...", DateTime.Now, url);
                         Console.WriteLine(message);
-                        System.Threading.Thread.Sleep(900000);
+                        System.Threading.Thread.Sleep(TimeSpan.FromMinutes(15));
                         Console.WriteLine(string.Format("{0}: Woke up...", DateTime.Now));
 
                     }
@@ -561,7 +530,7 @@ namespace TwitterUserTimeLine
                     {
                         Console.WriteLine(String.Format("{0}: Twitter servers are up but overloaded with requests : {1},\nData will not be retrieved for: {2}", DateTime.Now, ex.Message.ToString(), iRequestURL));
                         failureCounter++;
-                        System.Threading.Thread.Sleep(1000);
+                        System.Threading.Thread.Sleep(TimeSpan.FromMinutes(15));
                     }
                     else if (ex.Message.Contains("429"))
                     {
@@ -631,7 +600,7 @@ namespace TwitterUserTimeLine
                     {
                         Console.WriteLine(String.Format("{0}: Twitter servers are up but overloaded with requests : {1},\nData will not be retrieved for: {2}", DateTime.Now, ex.Message.ToString(), iRequestURL));
                         failureCounter++;
-                        System.Threading.Thread.Sleep(1000);
+                        System.Threading.Thread.Sleep(TimeSpan.FromMinutes(1));
                     }
                     else if (ex.Message.Contains("429"))
                     {
